@@ -161,7 +161,6 @@ f = {[0.2,0.8;0.5,0.65;0.8,0.8],...
      [0.5,0.2;0.1,0.5]};
 gS = [0.1,0.1];
 pdims=[1,1];
-figure()
 G1 = compositePebiGrid(gS, pdims,'faultLines',f);
 G2 = compositePebiGrid(gS, pdims,'faultLines',f,'interpolFL',[true; true]);
 
