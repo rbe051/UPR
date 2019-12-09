@@ -378,13 +378,15 @@ else
 end
 % label fault faces.
 if ~isempty(F.f.pts)
-  N      = G.faces.neighbors + 1; 
-  % N == 1 is now a boundary fault, so we have to add 1 to the start of 
-  % cPos.  We also add empty mapping for no fault pts.
-  f2cPos = [1;F.f.cPos; F.f.cPos(end)*ones(size(Pts,1)-size(F.f.pts,1),1)];
-  map1   = arrayfun(@colon, f2cPos(N(:,1)),f2cPos(N(:,1)+1)-1,'un',false);
-  map2   = arrayfun(@colon, f2cPos(N(:,2)),f2cPos(N(:,2)+1)-1,'un',false);
-  G.faces.tag = cellfun(@(c1,c2) numel(intersect(F.f.c(c1),F.f.c(c2)))>1, map1,map2);
+  % Compute distance from all circle centres to all fault points
+  d = pdist2(F.c.CC, fPts) <= F.c.R*1.1;
+  [ii, jj] = find(d);
+  S   = sparse(ii, jj+1, 1, size(F.c.CC,1), G.cells.num+1);
+  N   = G.faces.neighbors + 1;
+  % Cells sharing more than one circle are neighbors of the same fault face
+  tag = sum(S(:,N(:,1)) == S(:,N(:,2)) & S(:,N(:,1)) ~= 0,1) > 1;
+  G.faces.tag = full(tag)';
+%   
 else
   G.faces.tag = false(G.faces.num,1);
 end
@@ -393,7 +395,7 @@ end
 if ~isempty(wellPts)
   G.cells.tag = false(G.cells.num,1);
   % Add tag to all cells generated from wellPts
-  wellCells = size(F.f.pts,1)+1:size(F.f.pts,1)+size(wellPts,1);
+  wellCells = size(fPts,1)+1:size(fPts,1)+size(wellPts,1);
   G.cells.tag(wellCells)= true;
   
   % Add tag to well-fault crossings
